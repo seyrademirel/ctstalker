@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CT Stalker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #E63946;
+    --blue: #1D8CF8;
+    --white: #F8F9FF;
+    --dark: #050A18;
+    --dark2: #0C1428;
+    --dark3: #111D3A;
+    --border: rgba(29, 140, 248, 0.25);
+    --muted: rgba(248, 249, 255, 0.45);
+  }
+
+  body {
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(29, 140, 248, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 35% at 80% 80%, rgba(230, 57, 70, 0.07) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(29, 140, 248, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(29, 140, 248, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .header {
+    text-align: center;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .x-icon {
+    width: clamp(1.6rem, 5vw, 2.4rem);
+    height: clamp(1.6rem, 5vw, 2.4rem);
+    fill: var(--white);
+    opacity: 0.9;
+    flex-shrink: 0;
+  }
+
+  .logo span.red { color: var(--red); }
+  .logo span.blue { color: var(--blue); }
+
+  .tagline {
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .at-sign {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--blue);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.1rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    padding: 0.9rem 1rem 0.9rem 2.2rem;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]::placeholder { color: rgba(248, 249, 255, 0.25); }
+
+  input[type="text"]:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(29, 140, 248, 0.12);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s, opacity 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--blue);
+    color: var(--dark);
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--white);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover { border-color: rgba(29, 140, 248, 0.6); }
+
+  .btn-download {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(230, 57, 70, 0.35);
+  }
+
+  .btn-download:hover { border-color: var(--red); }
+
+  .result-card {
+    display: none;
+    width: 100%;
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--blue));
+  }
+
+  .result-card.visible { display: block; }
+
+  .result-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  .result-text .user { color: var(--blue); }
+  .result-text .stalker { color: var(--red); }
+
+  .result-actions {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .result-actions.visible { display: flex; }
+
+  .error-msg {
+    display: none;
+    font-size: 0.75rem;
+    color: var(--red);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+
+  .error-msg.visible { display: block; }
+
+  #hidden-canvas { display: none; }
+
+  .footer {
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+
+  .footer-label {
+    font-size: 0.65rem;
+    color: rgba(248, 249, 255, 0.25);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+
+  .footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: rgba(248, 249, 255, 0.45);
+    font-size: 0.8rem;
+    font-family: 'Space Mono', monospace;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-link:hover { color: var(--blue); }
+
+  .footer-x {
+    width: 13px;
+    height: 13px;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <svg class="x-icon" viewBox="0 0 1200 1227" xmlns="http://www.w3.org/2000/svg"><path d="M714.163 519.284 1160.89 0h-105.86L667.137 450.887 357.328 0H0l468.492 681.821L0 1226.37h105.866l409.625-476.431 327.181 476.431H1200L714.137 519.284h.026ZM569.165 687.828l-47.468-67.894-377.686-540.24h162.604l304.797 435.991 47.468 67.894 396.2 566.721H892.476L569.165 687.854v-.026Z"/></svg>
+      <span class="red">CT</span><span class="blue">STALKER</span>
+    </div>
+    <p class="tagline">Who is watching you on CT?</p>
+  </div>
+
+  <div class="input-group">
+    <div class="input-wrapper">
+      <span class="at-sign">@</span>
+      <input type="text" id="username-input" placeholder="your X username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <button class="btn btn-primary" onclick="generate()">Find My Stalker</button>
+    <div class="error-msg" id="error-msg">Please enter your username first.</div>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <p class="result-text" id="result-text"></p>
+  </div>
+
+  <div class="result-actions" id="result-actions">
+    <button class="btn btn-secondary" onclick="generate()">Generate Again</button>
+    <button class="btn btn-download" onclick="downloadImage()">Download Image</button>
+  </div>
+  <div class="footer">
+    <p class="footer-label">just for entertainment</p>
+    <a class="footer-link" href="https://x.com/seymirel" target="_blank" rel="noopener">
+      <svg class="footer-x" viewBox="0 0 1200 1227" xmlns="http://www.w3.org/2000/svg"><path d="M714.163 519.284 1160.89 0h-105.86L667.137 450.887 357.328 0H0l468.492 681.821L0 1226.37h105.866l409.625-476.431 327.181 476.431H1200L714.137 519.284h.026ZM569.165 687.828l-47.468-67.894-377.686-540.24h162.604l304.797 435.991 47.468 67.894 396.2 566.721H892.476L569.165 687.854v-.026Z"/></svg>
+      @seymirel
+    </a>
+  </div>
+</div>
+
+<canvas id="hidden-canvas"></canvas>
+
+<script>
+const POOL = [
+  "0xhvdes","seymirel","vitalik","notthreadguy","cobie",
+  "CryptoHayes","zhusu","Pentosh1","blknoiz06","hsaka",
+  "cz_binance","SBF_FTX","MicroStrategy","saylor",
+  "BrianArmstrong","coinbase","binance","krakenfx",
+  "gemini","coinbasewallet","phantom","MetaMask","uniswap","aave",
+  "0xPolygon","chainlink","solana","cosmos","polkadot",
+  "near_protocol","algorand","cardano",
+  "cartist00","crypto_bn","hunter_nft","alyonitaa","0xbambamy",
+  "zaddyfi","gyokeres_eth","elvis_analyst","datdefiguy1","kontonnft",
+  "0xabhip","xcryptoalucard","itsnessaonx","jordanonchain","0xliora",
+  "smolgeeek","telcier","oleribeweb30","tenacious_ar","kenodnb",
+  "kellyofweb3_","zee_zatt","sayghostgirl_","kukac24","nikos_ape",
+  "cryptokhenzar","its0xtiara","marexverse","brssncr","ylcn_tuncay",
+  "specialistog1","gistjulies9824","osivwi0","0xjada1","yourownexorcist",
+  "jihye80241","mishuweb3","orexioz","saradot",
+  "monitalan","walsxbt","br4ted","thegreatola",
+  "kierianv","jeremybtc","copertoxbt","shetalkscrypto","ozzychina",
+  "cyber_warrior","web3rehman","atulydv00",
+  "connyconny253","muslima_sol","telloo55","shynxbt",
+  "wyckoffweb","huseyin1tekin","hitarayo","adriadri",
+  "wezaverse","loffyhl",
+  "haiderlevi","ibrathedabra","kongbtc","nft_ilkery","meandrunkweb3",
+  "simseek00","freshmilkino","nadir_nfts",
+  "ilodiwow","deestar","medusaonchain",
+  "what3verman","0xbigm7","rollinpinkpanda","0x_nickthefreak",
+  "ModeXeth","CrypSaf","zacxbt",
+  "harisebrat","nikitabier","harisali_0x",
+  "jessepollak","baseposting","amit0xic","UxGsol","W1nszn","CryptaCobra","breyonchain",
+  "1Cilineth","Aviiweb3","rakermoon","kabnfa","jessyfries"
+];
+
+let lastResult = { user: '', stalker: '' };
+
+function clean(s) {
+  return s.replace(/^@+/, '').trim().toLowerCase();
+}
+
+function pick(exclude) {
+  const filtered = POOL.filter(u => u.toLowerCase() !== exclude.toLowerCase());
+  return filtered[Math.floor(Math.random() * filtered.length)];
+}
+
+function generate() {
+  const raw = document.getElementById('username-input').value;
+  const user = clean(raw);
+  const errEl = document.getElementById('error-msg');
+
+  if (!user) {
+    errEl.classList.add('visible');
+    return;
+  }
+  errEl.classList.remove('visible');
+
+  let stalker = pick(user);
+  lastResult = { user, stalker };
+
+  const resultText = document.getElementById('result-text');
+  resultText.innerHTML =
+    `<span class="user">@${user}</span>, your stalker is <span class="stalker">@${stalker}</span>`;
+
+  document.getElementById('result-card').classList.add('visible');
+  document.getElementById('result-actions').classList.add('visible');
+}
+
+document.getElementById('username-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generate();
+});
+
+function downloadImage() {
+  const { user, stalker } = lastResult;
+  if (!user) return;
+
+  const size = 1080;
+  const canvas = document.getElementById('hidden-canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#050A18';
+  ctx.fillRect(0, 0, size, size);
+
+  const gridSpacing = 80;
+  ctx.strokeStyle = 'rgba(29, 140, 248, 0.06)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= size; x += gridSpacing) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size); ctx.stroke();
+  }
+  for (let y = 0; y <= size; y += gridSpacing) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(size, y); ctx.stroke();
+  }
+
+  const grad = ctx.createLinearGradient(0, 0, size, 0);
+  grad.addColorStop(0, '#E63946');
+  grad.addColorStop(1, '#1D8CF8');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 80, size, 4);
+
+  const lineH = 96;
+  const totalH = lineH * 3;
+  let startY = (size - totalH) / 2;
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  function drawLine(text, color, yPos, fontSize) {
+    ctx.font = `bold ${fontSize}px 'Arial Black', Arial, sans-serif`;
+    ctx.fillStyle = color;
+    ctx.fillText(text, size / 2, yPos);
+  }
+
+  drawLine(`@${user}`, '#1D8CF8', startY + lineH * 0.5, 72);
+  drawLine('your stalker is', 'rgba(248, 249, 255, 0.65)', startY + lineH * 1.5, 40);
+  drawLine(`@${stalker}`, '#E63946', startY + lineH * 2.5, 80);
+
+  ctx.font = 'bold 28px Arial, sans-serif';
+  ctx.fillStyle = 'rgba(248, 249, 255, 0.25)';
+  ctx.fillText('ctstalker.xyz', size / 2, size - 60);
+
+  const link = document.createElement('a');
+  link.download = `ctstalker-${user}.png`;
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, 'image/png');
+}
+</script>
+</body>
+</html>
